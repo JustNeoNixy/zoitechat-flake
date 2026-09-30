@@ -93,62 +93,6 @@ stdenv.mkDerivation {
     (lib.mesonOption "with-perl" "${perl}/bin/perl")
   ];
 
-  postInstall = ''
-    rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
-
-    icondir="$out/share/icons/hicolor"
-    svg=$(find "$out/share/icons" -name 'zoitechat.svg' 2>/dev/null | head -n1)
-
-    icon=""
-        for candidate in \
-        "$icondir/256x256/apps/zoitechat.png" \
-        "$icondir/48x48/apps/zoitechat.png" \
-        "$icondir/scalable/apps/zoitechat.svg" \
-        "$out/share/pixmaps/zoitechat.svg"; do
-      if [ -f "$candidate" ]; then
-        icon="$candidate"
-        break
-      fi
-    done
-
-    if [ -z "$icon" ]; then
-      icon=$(find "$out/share" -iname 'zoitechat.*' 2>/dev/null | grep -Ei '\.(png|svg|xpm)$' | head -n1)
-    fi
-
-    echo "postInstall: icons under \$out/share:"
-    find "$out/share" \( -iname '*.png' -o -iname '*.svg' -o -iname '*.xpm' \) 2>/dev/null | sed "s|$out|\$out|" >&2
-    echo "postInstall: picked icon=$icon" >&2
-
-    if [ -n "$svg" ]; then
-      install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
-      for size in 128 256 512; do
-        install -d "$icondir/$size"'x'"$size/apps"
-        rsvg-convert -w "$size" -h "$size" "$svg" \
-          -o "$icondir/$size"'x'"$size/apps/zoitechat.png"
-      done
-      icon="$icondir/256x256/apps/zoitechat.png"
-    fi
-
-    mkdir -p "$out/share/applications"
-    cat > "$out/share/applications/zoitechat.desktop" <<EOF
-    [Desktop Entry]
-    Name=ZoiteChat
-    GenericName=IRC Client
-    Comment=Chat with other people online
-    Exec=$out/bin/zoitechat --existing %U
-    Icon=$icon
-    Terminal=false
-    Type=Application
-    Categories=GTK;Network;IRCClient;
-    StartupNotify=true
-    StartupWMClass=net.zoite.Zoitechat
-    X-GNOME-UsesNotifications=true
-    MimeType=x-scheme-handler/irc;x-scheme-handler/ircs;
-    EOF
-
-    desktop-file-validate "$out/share/applications/zoitechat.desktop" || true
-  '';
-
   postPatch = ''
     patchShebangs .
     sed -i "1s|.*|#!${buildPython}/bin/python3|" plugins/python/generate_plugin.py
@@ -156,6 +100,42 @@ stdenv.mkDerivation {
       --replace-fail "sysinfo_cargs = ['-DHAVE_CONFIG_H']" \
       "sysinfo_cargs = ['-DHAVE_CONFIG_H', '-D_DEFAULT_SOURCE']"
     cp ${publicSuffixList} src/common/public_suffix_list.dat
+  '';
+
+  postInstall = ''
+    rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
+
+    svg="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
+    icon="$out/share/icons/hicolor/48x48/apps/zoitechat.png"
+
+    if [ -f "$svg" ]; then
+      install -d "$out/share/icons/hicolor/256x256/apps"
+      rsvg-convert -w 256 -h 256 "$svg" \
+        -o "$out/share/icons/hicolor/256x256/apps/zoitechat.png"
+      icon="$out/share/icons/hicolor/256x256/apps/zoitechat.png"
+    fi
+
+    echo "postInstall: icon=$icon"
+    test -f "$icon" || echo "postInstall: WARNING icon missing" >&2
+
+    mkdir -p "$out/share/applications"
+    cat > "$out/share/applications/zoitechat.desktop" <<EOF
+[Desktop Entry]
+Name=ZoiteChat
+GenericName=IRC Client
+Comment=Chat with other people online
+Exec=$out/bin/zoitechat --existing %U
+Icon=$icon
+Terminal=false
+Type=Application
+Categories=GTK;Network;IRCClient;
+StartupNotify=true
+StartupWMClass=net.zoite.Zoitechat
+X-GNOME-UsesNotifications=true
+MimeType=x-scheme-handler/irc;x-scheme-handler/ircs;
+EOF
+
+    desktop-file-validate "$out/share/applications/zoitechat.desktop" || true
   '';
 
   meta = {
