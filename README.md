@@ -1,6 +1,6 @@
 # zoitechat-flake
 
-Nix flake for [ZoiteChat](https://zoitechat.org), a GTK3 IRC client based on HexChat. Built from the upstream source tag.
+Nix flake for ZoiteChat, a GTK3 IRC client based on HexChat.
 
 Unofficial. Not affiliated with the ZoiteChat project.
 
@@ -8,12 +8,12 @@ Unofficial. Not affiliated with the ZoiteChat project.
 
 Build and run it directly:
 
-```
+```bash
 nix build .#default
 ./result/bin/zoitechat
 ```
 
-As a flake input, add this block under `inputs`:
+Or add it to your system flake. Add this block under `inputs`:
 
 ```nix
 zoitechat = {
@@ -22,7 +22,16 @@ zoitechat = {
 };
 ```
 
-Then reference it wherever you build your package set:
+Then reference `inputs.zoitechat.packages.${system}.default` wherever you build your package set, for example:
+
+```nix
+packages = builtins.mapAttrs (system: pkgs: {
+  zoitechat = inputs.zoitechat.packages.${system}.default;
+  # ...your other packages
+}) inputs.nixpkgs.legacyPackages;
+```
+
+Or, inside a NixOS module (your `nixosSystem` call needs `specialArgs = { inherit inputs; };` for `inputs` to be available in `configuration.nix`):
 
 ```nix
 environment.systemPackages = [
@@ -30,10 +39,10 @@ environment.systemPackages = [
 ];
 ```
 
-That also installs a desktop entry, so ZoiteChat shows up in your app launcher.
+If you'd rather use the overlay so it shows up as `pkgs.zoitechat`, add this instead:
 
-Or use the overlay (`nixpkgs.overlays = [ inputs.zoitechat.overlays.default ];`) and reference `pkgs.zoitechat`.
+```nix
+nixpkgs.overlays = [ zoitechat.overlays.default ];
+```
 
-## Updating
-
-`nix run .#update` refreshes `sources.json` to the latest release. A daily workflow does the same and opens a PR.
+and reference it as `pkgs.zoitechat`.
