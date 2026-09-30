@@ -105,11 +105,12 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
-    # meson installs the icons as net.zoite.Zoitechat.{svg,png}, so copy the
-    # upstream sources to names we control and point Icon= at those.
-    install -Dm644 data/icons/zoitechat.png \
+    # meson installs the icons as net.zoite.Zoitechat.{svg,png}, so copy those
+    # to names we control and point Icon= at the copies. Source from $out
+    # because postInstall does not run with the source root as cwd.
+    install -Dm644 "$out/share/icons/hicolor/48x48/apps/net.zoite.Zoitechat.png" \
       "$out/share/icons/hicolor/48x48/apps/zoitechat.png"
-    install -Dm644 data/icons/zoitechat.svg \
+    install -Dm644 "$out/share/icons/hicolor/scalable/apps/net.zoite.Zoitechat.svg" \
       "$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
 
     icon="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
