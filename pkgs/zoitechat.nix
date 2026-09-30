@@ -25,6 +25,7 @@
 , desktop-file-utils
 , copyDesktopItems
 , makeDesktopItem
+, librsvg
 }:
 
 let
@@ -59,13 +60,14 @@ stdenv.mkDerivation {
     buildPython
     desktop-file-utils
     copyDesktopItems
+    librsvg
     wrapGAppsHook3
   ];
 
   desktopItems = [
     (makeDesktopItem {
       name = "zoitechat";
-      exec = "zoitechat --existing %U";
+      exec = "${placeholder "out"}/bin/zoitechat --existing %U";
       icon = "zoitechat";
       desktopName = "ZoiteChat";
       genericName = "IRC Client";
@@ -106,6 +108,20 @@ stdenv.mkDerivation {
 
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
+
+    icondir="$out/share/icons/hicolor"
+    for size in 48 128 256 512; do
+      install -d "$icondir/''${size}x''${size}/apps"
+      rsvg-convert \
+        -w "$size" -h "$size" \
+        data/icons/zoitechat.svg \
+        -o "$icondir/''${size}x''${size}/apps/zoitechat.png"
+    done
+
+    install -Dm444 data/icons/zoitechat.svg \
+      "$icondir/scalable/apps/zoitechat.svg"
+    install -Dm444 data/icons/zoitechat.svg \
+      "$out/share/pixmaps/zoitechat.svg"
   '';
 
   postPatch = ''
