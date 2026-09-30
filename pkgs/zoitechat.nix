@@ -68,7 +68,7 @@ stdenv.mkDerivation {
     (makeDesktopItem {
       name = "zoitechat";
       exec = "${placeholder "out"}/bin/zoitechat --existing %U";
-      icon = "zoitechat";
+      icon = "${placeholder "out"}/share/icons/hicolor/256x256/apps/zoitechat.png";
       desktopName = "ZoiteChat";
       genericName = "IRC Client";
       comment = "Chat with other people online";
@@ -109,7 +109,7 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
-    svg="$sourceRoot/data/icons/zoitechat.svg"
+    svg="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
     icondir="$out/share/icons/hicolor"
 
     if [ ! -f "$svg" ]; then
@@ -118,9 +118,8 @@ stdenv.mkDerivation {
     fi
 
     install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
-    install -Dm444 "$svg" "$icondir/scalable/apps/zoitechat.svg"
 
-    for size in 48 128 256 512; do
+    for size in 128 256 512; do
       install -d "$icondir/$size"'x'"$size/apps"
       rsvg-convert -w "$size" -h "$size" "$svg" \
         -o "$icondir/$size"'x'"$size/apps/zoitechat.png"
