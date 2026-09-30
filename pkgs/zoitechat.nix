@@ -23,6 +23,8 @@
 , enchant
 , gsettings-desktop-schemas
 , desktop-file-utils
+, copyDesktopItems
+, makeDesktopItem
 }:
 
 let
@@ -56,7 +58,21 @@ stdenv.mkDerivation {
     perl
     buildPython
     desktop-file-utils
+    copyDesktopItems
     wrapGAppsHook3
+  ];
+
+  desktopItems = [
+    (makeDesktopItem {
+      name = "zoitechat";
+      exec = "zoitechat --existing %U";
+      icon = "zoitechat";
+      desktopName = "ZoiteChat";
+      genericName = "IRC Client";
+      comment = "Chat with other people online";
+      categories = [ "GTK" "Network" "IRCClient" ];
+      mimeTypes = [ "x-scheme-handler/irc" "x-scheme-handler/ircs" ];
+    })
   ];
 
   buildInputs = [
@@ -87,6 +103,10 @@ stdenv.mkDerivation {
     (lib.mesonOption "with-python" "python3-embed")
     (lib.mesonOption "with-perl" "${perl}/bin/perl")
   ];
+
+  postInstall = ''
+    rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
+  '';
 
   postPatch = ''
     patchShebangs .
