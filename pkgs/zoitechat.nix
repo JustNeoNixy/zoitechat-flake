@@ -96,9 +96,28 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
-    icon=$(find "$out/share/icons" -name 'zoitechat.png' 2>/dev/null | head -n1)
-    svg=$(find "$out/share/icons" -name 'zoitechat.svg' 2>/dev/null | head -n1)
     icondir="$out/share/icons/hicolor"
+    svg=$(find "$out/share/icons" -name 'zoitechat.svg' 2>/dev/null | head -n1)
+
+    icon=""
+        for candidate in \
+        "$icondir/256x256/apps/zoitechat.png" \
+        "$icondir/48x48/apps/zoitechat.png" \
+        "$icondir/scalable/apps/zoitechat.svg" \
+        "$out/share/pixmaps/zoitechat.svg"; do
+      if [ -f "$candidate" ]; then
+        icon="$candidate"
+        break
+      fi
+    done
+
+    if [ -z "$icon" ]; then
+      icon=$(find "$out/share" -iname 'zoitechat.*' 2>/dev/null | grep -Ei '\.(png|svg|xpm)$' | head -n1)
+    fi
+
+    echo "postInstall: icons under \$out/share:"
+    find "$out/share" \( -iname '*.png' -o -iname '*.svg' -o -iname '*.xpm' \) 2>/dev/null | sed "s|$out|\$out|" >&2
+    echo "postInstall: picked icon=$icon" >&2
 
     if [ -n "$svg" ]; then
       install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
