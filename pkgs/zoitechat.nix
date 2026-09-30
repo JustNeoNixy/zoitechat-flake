@@ -109,19 +109,22 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
+    svg="$sourceRoot/data/icons/zoitechat.svg"
     icondir="$out/share/icons/hicolor"
-    for size in 48 128 256 512; do
-      install -d "$icondir/''${size}x''${size}/apps"
-      rsvg-convert \
-        -w "$size" -h "$size" \
-        data/icons/zoitechat.svg \
-        -o "$icondir/''${size}x''${size}/apps/zoitechat.png"
-    done
 
-    install -Dm444 data/icons/zoitechat.svg \
-      "$icondir/scalable/apps/zoitechat.svg"
-    install -Dm444 data/icons/zoitechat.svg \
-      "$out/share/pixmaps/zoitechat.svg"
+    if [ ! -f "$svg" ]; then
+      echo "postInstall: no icon at $svg" >&2
+      exit 1
+    fi
+
+    install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
+    install -Dm444 "$svg" "$icondir/scalable/apps/zoitechat.svg"
+
+    for size in 48 128 256 512; do
+      install -d "$icondir/$size"'x'"$size/apps"
+      rsvg-convert -w "$size" -h "$size" "$svg" \
+        -o "$icondir/$size"'x'"$size/apps/zoitechat.png"
+    done
   '';
 
   postPatch = ''
