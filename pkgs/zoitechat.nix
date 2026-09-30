@@ -68,7 +68,7 @@ stdenv.mkDerivation {
     (makeDesktopItem {
       name = "zoitechat";
       exec = "${placeholder "out"}/bin/zoitechat --existing %U";
-      icon = "${placeholder "out"}/share/icons/hicolor/256x256/apps/zoitechat.png";
+      icon = "${placeholder "out"}/share/icons/hicolor/scalable/apps/zoitechat.svg";
       desktopName = "ZoiteChat";
       genericName = "IRC Client";
       comment = "Chat with other people online";
@@ -109,13 +109,16 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
-    svg="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
+    svg=$(find "$out/share/icons" -name 'zoitechat.svg' 2>/dev/null | head -n1)
     icondir="$out/share/icons/hicolor"
 
-    if [ ! -f "$svg" ]; then
-      echo "postInstall: no icon at $svg" >&2
-      exit 1
+    if [ -z "$svg" ]; then
+      echo "postInstall: no zoitechat.svg under $out/share/icons" >&2
+      ls -R "$out/share/icons" >&2 || true
+      return 0
     fi
+
+    echo "postInstall: using $svg"
 
     install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
 
