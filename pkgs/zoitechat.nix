@@ -64,19 +64,6 @@ stdenv.mkDerivation {
     wrapGAppsHook3
   ];
 
-  desktopItems = [
-    (makeDesktopItem {
-      name = "zoitechat";
-      exec = "${placeholder "out"}/bin/zoitechat --existing %U";
-      icon = "${placeholder "out"}/share/icons/hicolor/scalable/apps/zoitechat.svg";
-      desktopName = "ZoiteChat";
-      genericName = "IRC Client";
-      comment = "Chat with other people online";
-      categories = [ "GTK" "Network" "IRCClient" ];
-      mimeTypes = [ "x-scheme-handler/irc" "x-scheme-handler/ircs" ];
-    })
-  ];
-
   buildInputs = [
     glib
     gtk3
@@ -109,24 +96,38 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
+    icon=$(find "$out/share/icons" -name 'zoitechat.png' 2>/dev/null | head -n1)
     svg=$(find "$out/share/icons" -name 'zoitechat.svg' 2>/dev/null | head -n1)
     icondir="$out/share/icons/hicolor"
 
-    if [ -z "$svg" ]; then
-      echo "postInstall: no zoitechat.svg under $out/share/icons" >&2
-      ls -R "$out/share/icons" >&2 || true
-      return 0
+    if [ -n "$svg" ]; then
+      install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
+      for size in 128 256 512; do
+        install -d "$icondir/$size"'x'"$size/apps"
+        rsvg-convert -w "$size" -h "$size" "$svg" \
+          -o "$icondir/$size"'x'"$size/apps/zoitechat.png"
+      done
+      icon="$icondir/256x256/apps/zoitechat.png"
     fi
 
-    echo "postInstall: using $svg"
+    mkdir -p "$out/share/applications"
+    cat > "$out/share/applications/zoitechat.desktop" <<EOF
+    [Desktop Entry]
+    Name=ZoiteChat
+    GenericName=IRC Client
+    Comment=Chat with other people online
+    Exec=$out/bin/zoitechat --existing %U
+    Icon=$icon
+    Terminal=false
+    Type=Application
+    Categories=GTK;Network;IRCClient;
+    StartupNotify=true
+    StartupWMClass=net.zoite.Zoitechat
+    X-GNOME-UsesNotifications=true
+    MimeType=x-scheme-handler/irc;x-scheme-handler/ircs;
+    EOF
 
-    install -Dm444 "$svg" "$out/share/pixmaps/zoitechat.svg"
-
-    for size in 128 256 512; do
-      install -d "$icondir/$size"'x'"$size/apps"
-      rsvg-convert -w "$size" -h "$size" "$svg" \
-        -o "$icondir/$size"'x'"$size/apps/zoitechat.png"
-    done
+    desktop-file-validate "$out/share/applications/zoitechat.desktop" || true
   '';
 
   postPatch = ''
