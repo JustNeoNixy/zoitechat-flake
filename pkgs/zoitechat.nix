@@ -22,6 +22,7 @@
 , isocodes
 , enchant
 , gsettings-desktop-schemas
+, desktop-file-utils
 }:
 
 let
@@ -54,6 +55,7 @@ stdenv.mkDerivation {
     glib.dev
     perl
     buildPython
+    desktop-file-utils
     wrapGAppsHook3
   ];
 
