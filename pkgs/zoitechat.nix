@@ -105,20 +105,27 @@ stdenv.mkDerivation {
   postInstall = ''
     rm -f "$out/share/applications/net.zoite.Zoitechat.desktop"
 
-    svg="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
-    icon="$out/share/icons/hicolor/48x48/apps/zoitechat.png"
+    # meson installs the icons as net.zoite.Zoitechat.{svg,png}, so copy the
+    # upstream sources to names we control and point Icon= at those.
+    install -Dm644 data/icons/zoitechat.png \
+      "$out/share/icons/hicolor/48x48/apps/zoitechat.png"
+    install -Dm644 data/icons/zoitechat.svg \
+      "$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
 
-    if [ -f "$svg" ]; then
-      install -d "$out/share/icons/hicolor/256x256/apps"
-      rsvg-convert -w 256 -h 256 "$svg" \
-        -o "$out/share/icons/hicolor/256x256/apps/zoitechat.png"
+    icon="$out/share/icons/hicolor/scalable/apps/zoitechat.svg"
+
+    if rsvg-convert -w 256 -h 256 "$icon" \
+      -o "$out/share/icons/hicolor/256x256/apps/zoitechat.png" 2>/dev/null; then
       icon="$out/share/icons/hicolor/256x256/apps/zoitechat.png"
+    else
+      icon="$out/share/icons/hicolor/48x48/apps/zoitechat.png"
     fi
 
+    test -f "$icon" || { echo "postInstall: icon not found: $icon" >&2; exit 1; }
     echo "postInstall: icon=$icon"
-    test -f "$icon" || echo "postInstall: WARNING icon missing" >&2
 
-    mkdir -p "$out/share/applications"
+    install -d "$out/share/applications"
+
     cat > "$out/share/applications/zoitechat.desktop" <<EOF
 [Desktop Entry]
 Name=ZoiteChat
@@ -136,6 +143,7 @@ MimeType=x-scheme-handler/irc;x-scheme-handler/ircs;
 EOF
 
     desktop-file-validate "$out/share/applications/zoitechat.desktop" || true
+    grep '^Icon=' "$out/share/applications/zoitechat.desktop"
   '';
 
   meta = {
