@@ -31,6 +31,8 @@ let
     url = "https://raw.githubusercontent.com/publicsuffix/list/a179a48c465e818cfd8d626691cb317985da87fb/public_suffix_list.dat";
     hash = "sha256-czMZL4GFiNnQBE0n1nIQx4Ks1th89x9UoA36IKVhz8k=";
   };
+
+  buildPython = python3.withPackages (ps: [ ps.cffi ]);
 in
 stdenv.mkDerivation {
   pname = "zoitechat";
@@ -51,6 +53,7 @@ stdenv.mkDerivation {
     gettext
     glib.dev
     perl
+    buildPython
     wrapGAppsHook3
   ];
 
@@ -85,6 +88,7 @@ stdenv.mkDerivation {
 
   postPatch = ''
     patchShebangs .
+    sed -i "1s|.*|#!${buildPython}/bin/python3|" plugins/python/generate_plugin.py
     cp ${publicSuffixList} src/common/public_suffix_list.dat
   '';
 
