@@ -26,9 +26,6 @@ jobs:
         run: nix build .#default
       - uses: peter-evans/create-pull-request@v7
         with:
-          # If you see "GitHub Actions is not permitted to create or approve pull requests",
-          # enable it under Settings > Actions > General > Workflow permissions,
-          # or pass a PAT secret here instead of GITHUB_TOKEN.
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "zoitechat: update to latest release"
           title: "zoitechat: update to latest release"

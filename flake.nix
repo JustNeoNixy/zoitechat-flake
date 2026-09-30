@@ -21,6 +21,7 @@
             runtimeInputs = [ pkgs.curl pkgs.jq pkgs.nix ];
             text = builtins.readFile ./scripts/update.sh;
           }}/bin/zoitechat-update";
+          meta.description = "Update the pinned zoitechat revision in sources.json";
         };
       }) // {
       overlays.default = final: prev: {

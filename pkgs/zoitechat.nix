@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , fetchFromGitHub
+, fetchurl
 , meson
 , ninja
 , pkg-config
@@ -25,6 +26,11 @@
 
 let
   src = lib.importJSON ../sources.json;
+
+  publicSuffixList = fetchurl {
+    url = "https://raw.githubusercontent.com/publicsuffix/list/a179a48c465e818cfd8d626691cb317985da87fb/public_suffix_list.dat";
+    hash = "sha256-czMZL4GFiNnQBE0n1nIQx4Ks1th89x9UoA36IKVhz8k=";
+  };
 in
 stdenv.mkDerivation {
   pname = "zoitechat";
@@ -78,7 +84,8 @@ stdenv.mkDerivation {
   ];
 
   postPatch = ''
-    patchShebangs meson_post_install.py tools 2>/dev/null || true
+    patchShebangs .
+    cp ${publicSuffixList} src/common/public_suffix_list.dat
   '';
 
   meta = {

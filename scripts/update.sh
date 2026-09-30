@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Resolve the latest ZoiteChat release and refresh sources.json.
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
