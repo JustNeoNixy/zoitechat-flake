@@ -89,6 +89,9 @@ stdenv.mkDerivation {
   postPatch = ''
     patchShebangs .
     sed -i "1s|.*|#!${buildPython}/bin/python3|" plugins/python/generate_plugin.py
+    substituteInPlace plugins/sysinfo/meson.build \
+      --replace-fail "sysinfo_cargs = ['-DHAVE_CONFIG_H']" \
+      "sysinfo_cargs = ['-DHAVE_CONFIG_H', '-D_DEFAULT_SOURCE']"
     cp ${publicSuffixList} src/common/public_suffix_list.dat
   '';
 
