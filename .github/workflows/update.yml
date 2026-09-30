@@ -1,4 +1,4 @@
-name: update
+name: Update zoitechat source
 
 on:
   schedule:
@@ -14,20 +14,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: cachix/install-nix-action@v27
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
-      - name: Update sources.json
+
+      - name: Run update script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: nix run .#update
-      - name: Build
-        run: nix build .#default
+        run: bash scripts/update.sh
+
       - uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "zoitechat: update to latest release"
-          title: "zoitechat: update to latest release"
-          branch: auto/update-zoitechat
-          delete-branch: true
+          commit-message: "zoitechat: bump to latest version"
+          title: "Update zoitechat"
+          branch: update-zoitechat
+          add-paths: sources.json
